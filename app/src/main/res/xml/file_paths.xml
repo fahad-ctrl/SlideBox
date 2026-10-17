@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <cache-path
+        name="slide_pdfs"
+        path="slide_pdfs/" />
+
+</paths>

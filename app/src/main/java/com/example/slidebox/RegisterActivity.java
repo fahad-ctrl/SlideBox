@@ -32,8 +32,10 @@ public class RegisterActivity extends AppCompatActivity {
                     );
 
                     view.setPadding(
-                            bars.left, bars.top,
-                            bars.right, bars.bottom
+                            bars.left,
+                            bars.top,
+                            bars.right,
+                            bars.bottom
                     );
 
                     return insets;
@@ -69,8 +71,13 @@ public class RegisterActivity extends AppCompatActivity {
         rbStudent.setTextColor(darkText);
         rbTeacher.setTextColor(darkText);
 
-        rbStudent.setButtonTintList(ColorStateList.valueOf(blue));
-        rbTeacher.setButtonTintList(ColorStateList.valueOf(blue));
+        rbStudent.setButtonTintList(
+                ColorStateList.valueOf(blue)
+        );
+
+        rbTeacher.setButtonTintList(
+                ColorStateList.valueOf(blue)
+        );
 
         btnCreateAccount.setTextColor(Color.WHITE);
         btnCreateAccount.setBackgroundTintList(
@@ -100,25 +107,40 @@ public class RegisterActivity extends AppCompatActivity {
                 return;
             }
 
-            if (accounts.exists(email)) {
-                etEmail.setError("This email is already registered");
-                etEmail.requestFocus();
+            if (!rbTeacher.isChecked() && !rbStudent.isChecked()) {
+                Toast.makeText(
+                        this,
+                        "Select Teacher or Student",
+                        Toast.LENGTH_SHORT
+                ).show();
                 return;
             }
 
             String role = rbTeacher.isChecked()
-                    ? "Teacher" : "Student";
+                    ? "Teacher"
+                    : "Student";
 
             btnCreateAccount.setEnabled(false);
             btnCreateAccount.setText("Creating...");
+
+            etName.setEnabled(false);
+            etEmail.setEnabled(false);
+            etPassword.setEnabled(false);
+            rbTeacher.setEnabled(false);
+            rbStudent.setEnabled(false);
 
             new Thread(() -> {
                 String error = null;
 
                 try {
-                    accounts.register(name, email, password, role);
+                    accounts.register(
+                            name,
+                            email,
+                            password,
+                            role
+                    );
                 } catch (Exception e) {
-                    error = "Could not create account. Try again.";
+                    error = AccountStore.registrationError(e);
                 }
 
                 String message = error;
@@ -131,14 +153,22 @@ public class RegisterActivity extends AppCompatActivity {
                     btnCreateAccount.setEnabled(true);
                     btnCreateAccount.setText("Create Account");
 
+                    etName.setEnabled(true);
+                    etEmail.setEnabled(true);
+                    etPassword.setEnabled(true);
+                    rbTeacher.setEnabled(true);
+                    rbStudent.setEnabled(true);
+
                     if (message != null) {
                         Toast.makeText(
-                                this, message, Toast.LENGTH_LONG
+                                this,
+                                message,
+                                Toast.LENGTH_LONG
                         ).show();
                     } else {
                         Toast.makeText(
                                 this,
-                                "Account created. Please log in.",
+                                "Online account created. Please log in.",
                                 Toast.LENGTH_LONG
                         ).show();
 
