@@ -71,6 +71,40 @@ public class DashboardActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
+        AccountStore accounts = new AccountStore(this);
+
+        if (!accounts.isLoggedIn()) {
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
+            return;
+        }
+
+        Button btnLogout = new Button(this);
+        btnLogout.setText("Logout");
+        btnLogout.setTextColor(Color.parseColor("#243B80"));
+        btnLogout.setBackgroundTintList(
+                ColorStateList.valueOf(Color.parseColor("#EAF0FF"))
+        );
+
+        ViewGroup dashboardRoot = findViewById(R.id.main);
+        dashboardRoot.addView(btnLogout, 0);
+
+        btnLogout.setOnClickListener(view -> {
+            accounts.logout();
+
+            Intent intent = new Intent(
+                    DashboardActivity.this,
+                    MainActivity.class
+            );
+
+            intent.addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK
+                            | Intent.FLAG_ACTIVITY_CLEAR_TASK
+            );
+
+            startActivity(intent);
+            finish();
+        });
         slides = getSharedPreferences("slides", MODE_PRIVATE);
 
         int padding = Math.round(
@@ -160,8 +194,8 @@ public class DashboardActivity extends AppCompatActivity {
 
         listSlides.setAdapter(slideAdapter);
 
-        String name = getIntent().getStringExtra("name");
-        String role = getIntent().getStringExtra("role");
+        String name = accounts.getName();
+        String role = accounts.getRole();
 
         tvWelcome.setText(
                 "Welcome, " + (name == null ? "" : name)
@@ -517,7 +551,6 @@ public class DashboardActivity extends AppCompatActivity {
                 );
                 return;
             }
-
             runOnUiThread(() ->
                     Toast.makeText(
                             DashboardActivity.this,

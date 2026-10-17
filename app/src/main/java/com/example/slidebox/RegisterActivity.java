@@ -1,12 +1,14 @@
 package com.example.slidebox;
 
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Patterns;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.Toast;
-import android.content.Intent;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -19,6 +21,8 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
+        AccountStore accounts = new AccountStore(this);
+
         ViewCompat.setOnApplyWindowInsetsListener(
                 findViewById(R.id.main),
                 (view, insets) -> {
@@ -28,10 +32,8 @@ public class RegisterActivity extends AppCompatActivity {
                     );
 
                     view.setPadding(
-                            bars.left,
-                            bars.top,
-                            bars.right,
-                            bars.bottom
+                            bars.left, bars.top,
+                            bars.right, bars.bottom
                     );
 
                     return insets;
@@ -41,49 +43,38 @@ public class RegisterActivity extends AppCompatActivity {
         EditText etName = findViewById(R.id.etName);
         EditText etEmail = findViewById(R.id.etEmail);
         EditText etPassword = findViewById(R.id.etPassword);
+
         RadioButton rbTeacher = findViewById(R.id.rbTeacher);
-        Button btnCreateAccount = findViewById(R.id.btnCreateAccount);
-        int darkText = android.graphics.Color.parseColor("#172033");
-        int hintText = android.graphics.Color.parseColor("#596579");
-        int blue = android.graphics.Color.parseColor("#243B80");
-
-        etName.setTextColor(darkText);
-        etEmail.setTextColor(darkText);
-        etPassword.setTextColor(darkText);
-
-        etName.setHintTextColor(hintText);
-        etEmail.setHintTextColor(hintText);
-        etPassword.setHintTextColor(hintText);
-
-        etName.setTextSize(18);
-        etEmail.setTextSize(18);
-        etPassword.setTextSize(18);
-
-        etName.setBackgroundTintList(
-                android.content.res.ColorStateList.valueOf(blue)
-        );
-        etEmail.setBackgroundTintList(
-                android.content.res.ColorStateList.valueOf(blue)
-        );
-        etPassword.setBackgroundTintList(
-                android.content.res.ColorStateList.valueOf(blue)
-        );
-
         RadioButton rbStudent = findViewById(R.id.rbStudent);
+
+        Button btnCreateAccount = findViewById(
+                R.id.btnCreateAccount
+        );
+
+        int darkText = Color.parseColor("#172033");
+        int hintText = Color.parseColor("#596579");
+        int blue = Color.parseColor("#243B80");
+
+        for (EditText field : new EditText[]{
+                etName, etEmail, etPassword
+        }) {
+            field.setTextColor(darkText);
+            field.setHintTextColor(hintText);
+            field.setTextSize(18);
+            field.setBackgroundTintList(
+                    ColorStateList.valueOf(blue)
+            );
+        }
 
         rbStudent.setTextColor(darkText);
         rbTeacher.setTextColor(darkText);
 
-        rbStudent.setButtonTintList(
-                android.content.res.ColorStateList.valueOf(blue)
-        );
-        rbTeacher.setButtonTintList(
-                android.content.res.ColorStateList.valueOf(blue)
-        );
+        rbStudent.setButtonTintList(ColorStateList.valueOf(blue));
+        rbTeacher.setButtonTintList(ColorStateList.valueOf(blue));
 
-        btnCreateAccount.setTextColor(android.graphics.Color.WHITE);
+        btnCreateAccount.setTextColor(Color.WHITE);
         btnCreateAccount.setBackgroundTintList(
-                android.content.res.ColorStateList.valueOf(blue)
+                ColorStateList.valueOf(blue)
         );
 
         btnCreateAccount.setOnClickListener(view -> {
@@ -109,19 +100,52 @@ public class RegisterActivity extends AppCompatActivity {
                 return;
             }
 
+            if (accounts.exists(email)) {
+                etEmail.setError("This email is already registered");
+                etEmail.requestFocus();
+                return;
+            }
+
             String role = rbTeacher.isChecked()
-                    ? "Teacher"
-                    : "Student";
-            Intent intent = new Intent(
-                    RegisterActivity.this,
-                    DashboardActivity.class
-            );
+                    ? "Teacher" : "Student";
 
-            intent.putExtra("name", name);
-            intent.putExtra("role", role);
+            btnCreateAccount.setEnabled(false);
+            btnCreateAccount.setText("Creating...");
 
-            startActivity(intent);
+            new Thread(() -> {
+                String error = null;
 
+                try {
+                    accounts.register(name, email, password, role);
+                } catch (Exception e) {
+                    error = "Could not create account. Try again.";
+                }
+
+                String message = error;
+
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
+
+                    btnCreateAccount.setEnabled(true);
+                    btnCreateAccount.setText("Create Account");
+
+                    if (message != null) {
+                        Toast.makeText(
+                                this, message, Toast.LENGTH_LONG
+                        ).show();
+                    } else {
+                        Toast.makeText(
+                                this,
+                                "Account created. Please log in.",
+                                Toast.LENGTH_LONG
+                        ).show();
+
+                        finish();
+                    }
+                });
+            }).start();
         });
     }
 }
